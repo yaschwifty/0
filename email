@@ -1,0 +1,81 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the dataset
+file_path = 'emails.csv'  # Replace with the path to your CSV file
+data = pd.read_csv(file_path)
+
+# Display basic information about the dataset
+print("Dataset information:")
+print(data.info())
+print("\nFirst few rows of the dataset:")
+print(data.head())
+
+# Analyze label distribution
+plt.figure(figsize=(6, 4))
+sns.countplot(x=data.iloc[:, -1], palette="viridis")
+plt.title('Label Distribution (0: Not Spam, 1: Spam)')
+plt.xlabel('Label')
+plt.ylabel('Count')
+plt.show()
+
+# Separate features and labels
+X = data.iloc[:, 1:-1]  # Exclude the first column (email name) and the last column (label)
+y = data.iloc[:, -1]    # The last column is the label (1 for spam, 0 for not spam)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+
+# Standardize the data for better performance of KNN and SVM
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# K-Nearest Neighbors classifier
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train_scaled, y_train)
+y_pred_knn = knn.predict(X_test_scaled)
+
+# Performance metrics for KNN
+print("K-Nearest Neighbors Classification Report:")
+print(classification_report(y_test, y_pred_knn))
+print("KNN Accuracy:", accuracy_score(y_test, y_pred_knn))
+
+# Plot KNN confusion matrix
+plt.figure(figsize=(6, 4))
+sns.heatmap(confusion_matrix(y_test, y_pred_knn), annot=True, fmt='d', cmap='Blues')
+plt.title('Confusion Matrix for KNN')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
+
+# Support Vector Machine classifier
+svm = SVC(kernel='linear')
+svm.fit(X_train_scaled, y_train)
+y_pred_svm = svm.predict(X_test_scaled)
+
+# Performance metrics for SVM
+print("Support Vector Machine Classification Report:")
+print(classification_report(y_test, y_pred_svm))
+print("SVM Accuracy:", accuracy_score(y_test, y_pred_svm))
+
+# Plot SVM confusion matrix
+plt.figure(figsize=(6, 4))
+sns.heatmap(confusion_matrix(y_test, y_pred_svm), annot=True, fmt='d', cmap='Purples')
+plt.title('Confusion Matrix for SVM')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
+
+# Compare the accuracy of the two classifiers
+print("\nSummary:")
+print(f"KNN Accuracy: {accuracy_score(y_test, y_pred_knn):.2f}")
+print(f"SVM Accuracy: {accuracy_score(y_test, y_pred_svm):.2f}")
