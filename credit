@@ -1,0 +1,96 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from sklearn.metrics import classification_report, confusion_matrix
+
+# Step 1: Read the dataset
+# Load the CSV file into a DataFrame
+df = pd.read_csv('Churn_Modelling.csv')
+
+# Display basic information about the dataset
+print(df.head())
+
+# Step 2: Data Preprocessing
+# Drop unnecessary columns (RowNumber, CustomerId, Surname)
+df = df.drop(['RowNumber', 'CustomerId', 'Surname'], axis=1)
+
+# Encode categorical features (Geography and Gender)
+label_encoder_geography = LabelEncoder()
+df['Geography'] = label_encoder_geography.fit_transform(df['Geography'])
+
+label_encoder_gender = LabelEncoder()
+df['Gender'] = label_encoder_gender.fit_transform(df['Gender'])
+
+# Separate features and target
+X = df.drop('Exited', axis=1)
+y = df['Exited']
+
+# Split data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 3: Normalize the train and test data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Visualize the correlation matrix
+plt.figure(figsize=(12, 10))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Feature Correlation Matrix')
+plt.show()
+
+# Step 4: Initialize and build the model
+model = Sequential()
+model.add(Dense(64, input_dim=X_train.shape[1], activation='relu'))
+model.add(Dropout(0.3))  # Regularization to prevent overfitting
+model.add(Dense(32, activation='relu'))
+model.add(Dropout(0.3))
+model.add(Dense(1, activation='sigmoid'))  # Binary classification output
+
+# Compile the model
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Train the model
+history = model.fit(X_train, y_train, validation_split=0.2, epochs=50, batch_size=32)
+
+# Plot training history
+plt.figure(figsize=(12, 5))
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Model Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
+
+plt.figure(figsize=(12, 5))
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Model Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+# Evaluate the model on test data
+y_pred = (model.predict(X_test) > 0.5).astype('int32')
+
+# Step 5: Model evaluation
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Plot the confusion matrix visually
+sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap='Blues')
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
