@@ -1,0 +1,66 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Function and its derivative
+def func(x):
+    return (x + 3) ** 2
+
+def gradient(x):
+    return 2 * (x + 3)
+
+# Gradient Descent Algorithm
+def gradient_descent(start_x, learning_rate, num_iterations):
+    x = start_x
+    x_values = [x]  # Store x values for visualization
+    func_values = [func(x)]  # Store function values for plotting
+    
+    for i in range(num_iterations):
+        grad = gradient(x)
+        x_new = x - learning_rate * grad
+        x_values.append(x_new)
+        func_values.append(func(x_new))
+        
+        # Print iteration details
+        print(f"Iteration {i+1}: x = {x_new:.4f}, f(x) = {func(x_new):.4f}, Gradient = {grad:.4f}")
+        
+        x = x_new  # Update x for the next iteration
+    
+    return x, x_values, func_values
+
+# Parameters for gradient descent
+start_x = 2
+learning_rate = 0.1
+num_iterations = 50
+
+# Run gradient descent
+final_x, x_values, func_values = gradient_descent(start_x, learning_rate, num_iterations)
+
+# Plotting the function y = (x + 3)^2
+x_plot = np.linspace(-6, 4, 400)
+y_plot = func(x_plot)
+
+plt.figure(figsize=(14, 6))
+
+# Plot of the function
+plt.subplot(1, 2, 1)
+plt.plot(x_plot, y_plot, label='y = (x + 3)^2')
+plt.scatter(start_x, func(start_x), color='red', label='Start (x=2)')
+plt.scatter(final_x, func(final_x), color='green', label=f'End (x={final_x:.2f})')
+plt.title('Function y = (x + 3)^2 and Gradient Descent Path')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.grid(True)
+
+# Plot of x value updates over iterations
+plt.subplot(1, 2, 2)
+plt.plot(x_values, func_values, marker='o', linestyle='-', color='blue')
+plt.title('Path of Gradient Descent')
+plt.xlabel('Iteration')
+plt.ylabel('y Value')
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
+
+print(f"Final x after {num_iterations} iterations: {final_x:.4f}")
