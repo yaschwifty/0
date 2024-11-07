@@ -36,21 +36,20 @@ plt.title('Distribution of Fare Amount')
 plt.xlabel('Fare Amount (USD)')
 plt.show()
 
-# Step 2: Identify outliers using IQR
-Q1 = df['fare_amount'].quantile(0.25)
-Q3 = df['fare_amount'].quantile(0.75)
-IQR = Q3 - Q1
-df = df[(df['fare_amount'] >= (Q1 - 1.5 * IQR)) & (df['fare_amount'] <= (Q3 + 1.5 * IQR))]
+# Step 2: Identify and remove outliers using IQR for fare_amount
+Q1_fare = df['fare_amount'].quantile(0.25)
+Q3_fare = df['fare_amount'].quantile(0.75)
+IQR_fare = Q3_fare - Q1_fare
+df = df[(df['fare_amount'] >= (Q1_fare - 1.5 * IQR_fare)) & (df['fare_amount'] <= (Q3_fare + 1.5 * IQR_fare))]
 
-# Visualize the distribution after outlier removal
+# Visualize the distribution after fare_amount outlier removal
 plt.figure(figsize=(10, 5))
 sns.histplot(df['fare_amount'], kde=True, bins=50)
 plt.title('Distribution of Fare Amount after Outlier Removal')
 plt.xlabel('Fare Amount (USD)')
 plt.show()
 
-# Step 3: Check correlation
-# Feature Engineering: Calculate distance between pickup and drop-off points
+# Step 3: Feature engineering - Calculate distance between pickup and drop-off points
 def haversine_distance(lat1, lon1, lat2, lon2):
     R = 6371  # Earth radius in kilometers
     lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
@@ -70,7 +69,20 @@ plt.title('Distribution of Trip Distances')
 plt.xlabel('Distance (km)')
 plt.show()
 
-# Step 4: Prepare data for model training (using only distance_km as a feature)
+# Step 4: Identify and remove outliers using IQR for distance_km
+Q1_dist = df['distance_km'].quantile(0.25)
+Q3_dist = df['distance_km'].quantile(0.75)
+IQR_dist = Q3_dist - Q1_dist
+df = df[(df['distance_km'] >= (Q1_dist - 1.5 * IQR_dist)) & (df['distance_km'] <= (Q3_dist + 1.5 * IQR_dist))]
+
+# Visualize the distribution after distance_km outlier removal
+plt.figure(figsize=(10, 5))
+sns.histplot(df['distance_km'], kde=True, bins=50)
+plt.title('Distribution of Trip Distances after Outlier Removal')
+plt.xlabel('Distance (km)')
+plt.show()
+
+# Step 5: Prepare data for model training (using only distance_km as a feature)
 X = df[['distance_km']]
 y = df['fare_amount']
 
@@ -95,7 +107,7 @@ rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
 rf_model.fit(X_train, y_train)
 y_pred_rf = rf_model.predict(X_test)
 
-# Step 5: Evaluate models
+# Step 6: Evaluate models
 def evaluate_model(y_true, y_pred, model_name):
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     r2 = r2_score(y_true, y_pred)
