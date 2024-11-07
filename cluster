@@ -1,0 +1,63 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from scipy.cluster.hierarchy import dendrogram, linkage
+from sklearn.decomposition import PCA
+
+data = pd.read_csv('/kaggle/input/sample-sales-data/sales_data_sample.csv',encoding='unicode_escape')
+data.head()
+
+# Preprocessing: Select numerical columns for clustering (we exclude non-numeric features like "ORDERDATE" and "CUSTOMERNAME")
+numerical_cols = ['QUANTITYORDERED', 'PRICEEACH', 'SALES', 'QTR_ID', 'MONTH_ID', 'YEAR_ID', 'MSRP']
+data = data[numerical_cols]
+
+# Handle missing values (if any)
+data.fillna(data.mean(), inplace=True)
+
+# Normalize the data (important for clustering algorithms)
+scaler = StandardScaler()
+data_scaled = scaler.fit_transform(data)
+
+# Elbow Method to find optimal number of clusters
+inertia = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(data_scaled)
+    inertia.append(kmeans.inertia_)
+
+# Plot the elbow curve
+plt.figure(figsize=(8, 6))
+plt.plot(range(1, 11), inertia, marker='o')
+plt.title("Elbow Method for Optimal k")
+plt.xlabel("Number of Clusters")
+plt.ylabel("Inertia")
+plt.show()
+
+# From the elbow plot, choose the optimal number of clusters
+optimal_k = 3  # For example, we choose 4 as it looks like the elbow point.
+
+# Perform K-Means clustering with the chosen number of clusters
+kmeans = KMeans(n_clusters=optimal_k, random_state=42)
+clusters = kmeans.fit_predict(data_scaled)
+
+# Add cluster labels to the dataset
+data['Cluster'] = clusters
+
+# Visualizing clusters in a 2D space using PCA (for visualization purposes)
+pca = PCA(n_components=2)
+principal_components = pca.fit_transform(data_scaled)
+data_pca = pd.DataFrame(data=principal_components, columns=['PC1', 'PC2'])
+data_pca['Cluster'] = clusters
+
+# Plot the clusters
+plt.figure(figsize=(8, 6))
+plt.scatter(data_pca[data_pca['Cluster'] == 0]['PC1'], data_pca[data_pca['Cluster'] == 0]['PC2'], label="Cluster 1", s=50)
+plt.scatter(data_pca[data_pca['Cluster'] == 1]['PC1'], data_pca[data_pca['Cluster'] == 1]['PC2'], label="Cluster 2", s=50)
+plt.scatter(data_pca[data_pca['Cluster'] == 2]['PC1'], data_pca[data_pca['Cluster'] == 2]['PC2'], label="Cluster 3", s=50)
+plt.title('K-Means Clusters')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.legend()
+plt.show()
